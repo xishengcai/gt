@@ -2,25 +2,15 @@ package gt
 
 import (
 	"testing"
+	"time"
 )
 
-type gitRepo []struct {
-	ID          int    `json:"id"`
-	Login       string `json:"login"`
-	Name        string `json:"name"`
-	URL         string `json:"url"`
-	AvatarURL   string `json:"avatar_url"`
-	ReposURL    string `json:"repos_url"`
-	EventsURL   string `json:"events_url"`
-	MembersURL  string `json:"members_url"`
-	Description string `json:"description"`
-	FollowCount int    `json:"follow_count"`
-}
-
 func TestGet(t *testing.T) {
-	result := gitRepo{}
+	go mockServer(t)
 
-	url := "https://gitee.com/api/v5/user/orgs?access_token=611895eac337ae09a08e982d8c744495&page=1&per_page=20"
+	result := personExample{}
+
+	url := "http://localhost/json-example"
 	err := NewDefaultClient().
 		SetURL(url).
 		Get().
@@ -30,4 +20,28 @@ func TestGet(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Logf("%+v", result)
+}
+
+func TestHttpLog(t *testing.T) {
+	go mockServer(t)
+
+	for i := 0; i < 100; i++ {
+		go func() {
+			result := personExample{}
+			url := "http://localhost/json-example"
+			err := NewDefaultClient().
+				SetURL(url).
+				SetLog("hello").
+				Get().
+				Do().
+				InTo(&result, JSON)
+			if err != nil {
+				t.Fatal(err)
+			}
+			//t.Logf("%+v", result)
+		}()
+	}
+
+	time.Sleep(10 * time.Second)
+
 }

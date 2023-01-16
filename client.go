@@ -18,7 +18,7 @@ type Client struct {
 	Method string
 	URL    string
 	Body   io.Reader
-	Header map[string]interface{}
+	Header http.Header
 	Resp   *http.Response
 	Err    error
 	Option
@@ -29,14 +29,20 @@ const (
 	Timeout20 time.Duration = 20
 )
 
+const (
+	contentType     = "Content-Type"
+	xmlContentType  = "application/xml"
+	jsonContentType = "application/json"
+)
+
 // Option http request option
 type Option struct {
 	Timeout time.Duration
 }
 
 var (
-	JsonHeader = map[string]interface{}{
-		"Content-Type": "application/json",
+	defaultHeader = http.Header{
+		contentType: []string{jsonContentType},
 	}
 )
 
@@ -44,7 +50,7 @@ var (
 func NewClient() *Client {
 	return &Client{
 		ht:     http.DefaultClient,
-		Header: make(map[string]interface{}, 0),
+		Header: http.Header{},
 	}
 }
 
@@ -52,7 +58,7 @@ func NewClient() *Client {
 func NewDefaultClient() *Client {
 	return &Client{
 		ht:     http.DefaultClient,
-		Header: JsonHeader,
+		Header: defaultHeader,
 		Option: Option{
 			Timeout: time.Second * Timeout10,
 		},
@@ -99,6 +105,11 @@ func (c *Client) SetTimeout(duration time.Duration) *Client {
 	return c
 }
 
+func (c *Client) SetLog(title string) *Client {
+	c.ht.Transport = NewLogTrace(title)
+	return c
+}
+
 func transformResponse(resp *http.Response) error {
 	var body []byte
 	if resp.Body != nil {
@@ -128,6 +139,11 @@ func (c *Client) Do() *Client {
 	c.ht.Timeout = c.Option.Timeout
 
 	c.Resp, err = c.ht.Do(req)
+	if err != nil {
+		c.Err = err
+		return c
+	}
+
 	switch {
 	case c.Resp.StatusCode == http.StatusSwitchingProtocols:
 		// no-op, we've been upgraded
@@ -139,11 +155,6 @@ func (c *Client) Do() *Client {
 		return c
 	}
 
-	if err != nil {
-		c.Err = err
-		return c
-	}
-
 	return c
 }
 
@@ -152,9 +163,9 @@ func (c *Client) SetBody(body io.Reader) *Client {
 	return c
 }
 
-func (c *Client) SetHeader(h map[string]interface{}) *Client {
-	for k, v := range h {
-		c.Header[k] = v
+func (c *Client) SetHeader(key string, values ...string) *Client {
+	for _, v := range values {
+		c.Header.Add(key, v)
 	}
 	return c
 }
