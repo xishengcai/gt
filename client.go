@@ -65,12 +65,17 @@ func NewDefaultClient() *Client {
 	}
 }
 
-func (c *Client) Get() *Client {
+func (c *Client) GET() *Client {
 	c.Method = "GET"
 	return c
 }
 
-func (c *Client) Delete() *Client {
+func (c *Client) POST() *Client {
+	c.Method = "POST"
+	return c
+}
+
+func (c *Client) DELETE() *Client {
 	c.Method = "DELETE"
 	return c
 }
