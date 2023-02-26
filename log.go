@@ -30,15 +30,13 @@ var (
 	color = reset
 )
 
-func NewLogTrace(title string) http.RoundTripper {
+func NewLogTrace() http.RoundTripper {
 	return &logTrace{
-		title:                 title,
 		delegatedRoundTripper: &http.Transport{},
 	}
 }
 
 type logTrace struct {
-	title                 string
 	delegatedRoundTripper http.RoundTripper
 }
 
@@ -64,7 +62,6 @@ func (l *logTrace) RoundTrip(request *http.Request) (*http.Response, error) {
 		response.Body = ioutil.NopCloser(bytes.NewReader(responseBody))
 	}
 
-	//log := fmt.Sprintf("Title: %s, Time: %s ", strings.ToUpper(l.title), start.Format("2006/01/02 - 15:04:05"))
 	log := fmt.Sprintf("\n%s %s %s \n", request.Host, request.Method, request.URL)
 	log += fmt.Sprintf("RequestBody: %s \n", requestBodyStr)
 	log += fmt.Sprintf("Response: %s \n", responseBodyStr)

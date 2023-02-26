@@ -65,43 +65,45 @@ func NewDefaultClient() *Client {
 	}
 }
 
-func (c *Client) GET() *Client {
+func (c *Client) GET(url string) *Client {
 	c.Method = "GET"
+	c.URL = url
 	return c
 }
 
-func (c *Client) POST() *Client {
+func (c *Client) POST(url string) *Client {
 	c.Method = "POST"
+	c.URL = url
 	return c
 }
 
-func (c *Client) DELETE() *Client {
+func (c *Client) DELETE(url string) *Client {
 	c.Method = "DELETE"
+	c.URL = url
 	return c
 }
 
-func (c *Client) PUT() *Client {
+func (c *Client) PUT(url string) *Client {
 	c.Method = "PUT"
+	c.URL = url
 	return c
 }
 
-func (c *Client) UPDATE() *Client {
+func (c *Client) UPDATE(url string) *Client {
 	c.Method = "UPDATE"
+	c.URL = url
 	return c
 }
 
-func (c *Client) HEADER() *Client {
+func (c *Client) HEADER(url string) *Client {
 	c.Method = "HEADER"
+	c.URL = url
 	return c
 }
 
-func (c *Client) OPTIONS() *Client {
+func (c *Client) OPTIONS(url string) *Client {
 	c.Method = "OPTIONS"
-	return c
-}
-
-func (c *Client) SetURL(URL string) *Client {
-	c.URL = URL
+	c.URL = url
 	return c
 }
 
@@ -110,8 +112,8 @@ func (c *Client) SetTimeout(duration time.Duration) *Client {
 	return c
 }
 
-func (c *Client) SetLog(title string) *Client {
-	c.ht.Transport = NewLogTrace(title)
+func (c *Client) EnableLog() *Client {
+	c.ht.Transport = NewLogTrace()
 	return c
 }
 
@@ -168,23 +170,22 @@ func (c *Client) SetBody(body io.Reader) *Client {
 	return c
 }
 
+// AddHeader add http.Header
+func (c *Client) AddHeader(header http.Header) *Client {
+	for key, values := range header {
+		for _, v := range values {
+			c.SetHeader(key, v)
+		}
+	}
+	return c
+}
+
 func (c *Client) SetHeader(key string, values ...string) *Client {
 	for _, v := range values {
 		c.Header.Add(key, v)
 	}
 	return c
 }
-
-const (
-	JSON DecodeFormat = "json"
-	YAML DecodeFormat = "yaml"
-)
-
-var (
-	DecoderTypeNotSupport = errors.New("decoder type not support")
-)
-
-type DecodeFormat string
 
 func (c *Client) InTo(object interface{}, format DecodeFormat) error {
 	if c.Err != nil {
