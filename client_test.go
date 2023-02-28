@@ -13,7 +13,7 @@ func TestGet(t *testing.T) {
 	result := personExample{}
 
 	url := "http://localhost/json-example"
-	err := NewDefaultClient().
+	err := NewClient().
 		GET(url).
 		Do().
 		InTo(&result, JSON)
@@ -29,14 +29,27 @@ func TestHttpLog(t *testing.T) {
 			result := personExample{}
 			url := "http://localhost/json-example"
 			err := NewDefaultClient().
-				EnableLog().
 				GET(url).
 				Do().
 				InTo(&result, JSON)
 			assert.Nil(t, err)
 		}()
 	}
-
 	time.Sleep(10 * time.Second)
 
+}
+
+func TestGetHeader(t *testing.T) {
+	go mockServer(t)
+
+	header := map[string][]string{
+		"role": []string{"hello"},
+	}
+	url := "http://localhost/header"
+	c := NewDefaultClient().
+		GET(url).
+		AddHeader(header).
+		EnableLog(2).
+		Do()
+	assert.Nil(t, c.Err)
 }

@@ -48,9 +48,19 @@ func mockServer(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+
+	headerHandler := func(w http.ResponseWriter, r *http.Request) {
+		role := r.Header.Get("role")
+		if role == "" {
+			t.Fatal("not found header key role")
+		}
+		_, _ = w.Write([]byte("success"))
+		return
+	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("/json-example", jsonHandler)
 	mux.HandleFunc("/xml-example", xmlHandler)
+	mux.HandleFunc("/header", headerHandler)
 	err := http.ListenAndServe(":80", mux)
 	if err != nil {
 		t.Fatal(err)

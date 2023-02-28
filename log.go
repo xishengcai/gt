@@ -7,8 +7,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"time"
-
-	"k8s.io/klog/v2"
 )
 
 const (
@@ -23,20 +21,32 @@ const (
 )
 
 const (
-	tolerateTime = 5 * time.Second
+	tolerateTime = 5000 * time.Millisecond
+)
+
+// LogLevel 日志打印等级
+type LogLevel int
+
+const (
+	// LogInfo Print source host，method， request URL
+	LogInfo LogLevel = 1
+	// LogDebug Print request body and response
+	LogDebug LogLevel = 2
 )
 
 var (
 	color = reset
 )
 
-func NewLogTrace() http.RoundTripper {
+func NewLogTrace(l LogLevel) http.RoundTripper {
 	return &logTrace{
+		LogLevel:              l,
 		delegatedRoundTripper: &http.Transport{},
 	}
 }
 
 type logTrace struct {
+	LogLevel
 	delegatedRoundTripper http.RoundTripper
 }
 
@@ -62,18 +72,18 @@ func (l *logTrace) RoundTrip(request *http.Request) (*http.Response, error) {
 		response.Body = ioutil.NopCloser(bytes.NewReader(responseBody))
 	}
 
-	log := fmt.Sprintf("\n%s %s %s \n", request.Host, request.Method, request.URL)
-	log += fmt.Sprintf("RequestBody: %s \n", requestBodyStr)
-	log += fmt.Sprintf("Response: %s \n", responseBodyStr)
-
 	cost := time.Now().Sub(start)
 	if cost > tolerateTime {
 		color = red
 	}
 
-	log += fmt.Sprintf("Cost time: %s%s\033[0m\n", color, time.Now().Sub(start))
+	fmt.Printf("[SOURCE]: %s [METHOD]: %s [COST]:%s%s\u001B[0m [URL]:%s\n",
+		request.Host, request.Method, color, time.Now().Sub(start), request.URL)
 
-	klog.Info(log)
+	if l.LogLevel > LogInfo {
+		fmt.Printf("RequestBody: %s\n", requestBodyStr)
+		fmt.Printf("Response: %s\n ", responseBodyStr)
+	}
 
 	return response, err
 }

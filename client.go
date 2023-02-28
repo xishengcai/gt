@@ -14,13 +14,14 @@ import (
 
 // Client wrap http.Client, used for Do request
 type Client struct {
-	ht     *http.Client
-	Method string
-	URL    string
-	Body   io.Reader
-	Header http.Header
-	Resp   *http.Response
-	Err    error
+	ht       *http.Client
+	Method   string
+	URL      string
+	Body     io.Reader
+	Header   http.Header
+	Resp     *http.Response
+	LogLevel LogLevel
+	Err      error
 	Option
 }
 
@@ -62,6 +63,7 @@ func NewDefaultClient() *Client {
 		Option: Option{
 			Timeout: time.Second * Timeout10,
 		},
+		LogLevel: LogInfo,
 	}
 }
 
@@ -112,8 +114,8 @@ func (c *Client) SetTimeout(duration time.Duration) *Client {
 	return c
 }
 
-func (c *Client) EnableLog() *Client {
-	c.ht.Transport = NewLogTrace()
+func (c *Client) EnableLog(l LogLevel) *Client {
+	c.ht.Transport = NewLogTrace(l)
 	return c
 }
 
@@ -142,7 +144,7 @@ func (c *Client) Do() *Client {
 		c.Err = err
 		return c
 	}
-
+	req.Header = c.Header
 	c.ht.Timeout = c.Option.Timeout
 
 	c.Resp, err = c.ht.Do(req)
@@ -174,7 +176,7 @@ func (c *Client) SetBody(body io.Reader) *Client {
 func (c *Client) AddHeader(header http.Header) *Client {
 	for key, values := range header {
 		for _, v := range values {
-			c.SetHeader(key, v)
+			c.Header.Add(key, v)
 		}
 	}
 	return c
