@@ -1,10 +1,13 @@
 package gt
 
-import "errors"
+import (
+	"errors"
+)
 
 const (
 	JSON DecodeFormat = "json"
 	YAML DecodeFormat = "yaml"
+	BODY DecodeFormat = "body"
 )
 
 var (

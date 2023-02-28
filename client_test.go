@@ -53,3 +53,22 @@ func TestGetHeader(t *testing.T) {
 		Do()
 	assert.Nil(t, c.Err)
 }
+
+func TestBodyDecode(t *testing.T) {
+	go mockServer(t)
+
+	header := map[string][]string{
+		"role": []string{"hello"},
+	}
+	var result string
+	url := "http://localhost/header"
+	err := NewDefaultClient().
+		GET(url).
+		AddHeader(header).
+		EnableLog(2).
+		Do().
+		InTo(&result, BODY)
+	assert.Nil(t, err)
+	t.Log("result: ", result)
+
+}

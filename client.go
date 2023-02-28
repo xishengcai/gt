@@ -203,6 +203,9 @@ func (c *Client) InTo(object interface{}, format DecodeFormat) error {
 	case YAML:
 		decode := yaml.NewDecoder(c.Resp.Body)
 		return decode.Decode(object)
+	case BODY:
+		decode := NewBodyDecode(c.Resp.Body)
+		return decode.Decode(object)
 	}
 	return DecoderTypeNotSupport
 }
