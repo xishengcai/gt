@@ -1,12 +1,16 @@
 package gt
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"reflect"
 	"unsafe"
 )
+
+// ErrUnknownType 未知错误类型
+var ErrUnknownType = errors.New("unknown type")
 
 // Decoder is the decoding interface
 type Decoder interface {
@@ -27,21 +31,6 @@ func NewBodyDecode(r io.Reader) Decoder {
 	}
 
 	return &BodyDecode{r: r}
-}
-
-var convertBodyFunc = map[reflect.Kind]convert{
-	reflect.Uint:    {bitSize: 0, cb: setUintField},
-	reflect.Uint8:   {bitSize: 8, cb: setUintField},
-	reflect.Uint16:  {bitSize: 16, cb: setUintField},
-	reflect.Uint32:  {bitSize: 32, cb: setUintField},
-	reflect.Uint64:  {bitSize: 64, cb: setUintField},
-	reflect.Int:     {bitSize: 0, cb: setIntField},
-	reflect.Int8:    {bitSize: 8, cb: setIntField},
-	reflect.Int16:   {bitSize: 16, cb: setIntField},
-	reflect.Int32:   {bitSize: 32, cb: setIntField},
-	reflect.Int64:   {bitSize: 64, cb: setIntDurationField},
-	reflect.Float32: {bitSize: 32, cb: setFloatField},
-	reflect.Float64: {bitSize: 64, cb: setFloatField},
 }
 
 // Decode body decoder
@@ -77,12 +66,6 @@ func Body(r io.Reader, obj interface{}) error {
 		value.SetBytes(all)
 		return nil
 	}
-
-	fn, ok := convertBodyFunc[value.Kind()]
-	if ok {
-		return fn.cb(BytesToString(all), fn.bitSize, emptyField, value)
-	}
-
 	return fmt.Errorf("type (%T) %s", value, ErrUnknownType)
 }
 
@@ -94,7 +77,6 @@ func LoopElem(v reflect.Value) reflect.Value {
 		}
 		v = v.Elem()
 	}
-
 	return v
 }
 

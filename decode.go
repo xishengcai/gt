@@ -7,6 +7,7 @@ import (
 const (
 	JSON DecodeFormat = "json"
 	YAML DecodeFormat = "yaml"
+	// BODY 可以解析 string，[]byte
 	BODY DecodeFormat = "body"
 )
 
