@@ -8,7 +8,7 @@ import (
 )
 
 func TestGet(t *testing.T) {
-	go mockServer(t)
+	go startServer(t)
 
 	result := personExample{}
 
@@ -22,7 +22,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestHttpLog(t *testing.T) {
-	go mockServer(t)
+	go startServer(t)
 
 	for i := 0; i < 100; i++ {
 		go func() {
@@ -40,7 +40,7 @@ func TestHttpLog(t *testing.T) {
 }
 
 func TestGetHeader(t *testing.T) {
-	go mockServer(t)
+	go startServer(t)
 
 	header := map[string][]string{
 		"role": []string{"hello"},
@@ -55,7 +55,7 @@ func TestGetHeader(t *testing.T) {
 }
 
 func TestBodyDecode(t *testing.T) {
-	go mockServer(t)
+	go startServer(t)
 
 	header := map[string][]string{
 		"role": []string{"hello"},

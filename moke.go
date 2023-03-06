@@ -3,6 +3,7 @@ package gt
 import (
 	"math/rand"
 	"net/http"
+	"sync"
 	"testing"
 	"time"
 )
@@ -26,6 +27,10 @@ type personExample struct {
 	Name string `json:"name"`
 	Age  int    `json:"age"`
 }
+
+var (
+	serverOnce sync.Once
+)
 
 func mockServer(t *testing.T) {
 	xmlHandler := func(w http.ResponseWriter, r *http.Request) {
@@ -66,4 +71,10 @@ func mockServer(t *testing.T) {
 		t.Fatal(err)
 	}
 
+}
+
+func startServer(t *testing.T){
+	serverOnce.Do(func(){
+		mockServer(t)
+	})
 }

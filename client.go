@@ -127,6 +127,7 @@ func (c *Client) SetTimeout(duration time.Duration) *Client {
 	return c
 }
 
+// EnableLog 重写RoundTrip方法，打印Request和Resp等信息
 func (c *Client) EnableLog(l LogLevel) *Client {
 	c.ht.Transport = NewLogTrace(l)
 	return c
