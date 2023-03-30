@@ -1,6 +1,7 @@
 package gt
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -50,7 +51,13 @@ var (
 // NewClient return http default client
 func NewClient() *Client {
 	return &Client{
-		ht:     http.DefaultClient,
+		ht: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+		},
 		Header: http.Header{},
 	}
 }
@@ -58,7 +65,13 @@ func NewClient() *Client {
 // NewDefaultClient return http default client and set Json header
 func NewDefaultClient() *Client {
 	return &Client{
-		ht:     http.DefaultClient,
+		ht: &http.Client{
+			Transport: &http.Transport{
+				TLSClientConfig: &tls.Config{
+					InsecureSkipVerify: true,
+				},
+			},
+		},
 		Header: defaultHeader,
 		Option: Option{
 			Timeout: time.Second * Timeout10,

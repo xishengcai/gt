@@ -3,6 +3,7 @@ package gt
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -40,8 +41,12 @@ var (
 
 func NewLogTrace(l LogLevel) http.RoundTripper {
 	return &logTrace{
-		LogLevel:              l,
-		delegatedRoundTripper: &http.Transport{},
+		LogLevel: l,
+		delegatedRoundTripper: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: true,
+			},
+		},
 	}
 }
 
