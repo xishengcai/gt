@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"golang.org/x/net/http2"
@@ -92,6 +93,11 @@ func (c *Client) POST(url string) *Client {
 	return c
 }
 
+func (c *Client) PATCH(url string) *Client {
+	c.Method = "PATCH"
+	c.URL = url
+	return c
+}
 func (c *Client) DELETE(url string) *Client {
 	c.Method = "DELETE"
 	c.URL = url
@@ -200,6 +206,19 @@ func (c *Client) SetHeader(key string, values ...string) *Client {
 	for _, v := range values {
 		c.Header.Add(key, v)
 	}
+	return c
+}
+
+func (c *Client) SetQuery(key, value string) *Client {
+	if key == "" || value == "" {
+		return c
+	}
+	if strings.Contains(c.URL, "?") {
+		c.URL += "&"
+	} else {
+		c.URL += "?"
+	}
+	c.URL = c.URL + fmt.Sprintf("%s=%s", key, value)
 	return c
 }
 
