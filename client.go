@@ -220,7 +220,7 @@ func (c *Client) SetHeader(key string, values ...string) *Client {
 	return c
 }
 
-func (c *Client) SetQuery(key, value string) *Client {
+func (c *Client) AddQuery(key, value string) *Client {
 	if key == "" || value == "" {
 		return c
 	}
@@ -232,12 +232,12 @@ func (c *Client) SetQuery(key, value string) *Client {
 	c.URL = c.URL + fmt.Sprintf("%s=%s", key, value)
 	return c
 }
-func (c *Client) SetParams(params map[string]interface{}) *Client {
+func (c *Client) SetQuery(params map[string]interface{}) *Client {
 	if len(params) == 0 {
 		return c
 	}
 	for k, v := range params {
-		c.SetQuery(k, fmt.Sprintf("%v", v))
+		c.AddQuery(k, fmt.Sprintf("%v", v))
 	}
 	return c
 }
