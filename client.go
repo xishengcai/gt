@@ -1,12 +1,16 @@
 package gt
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -24,6 +28,7 @@ type Client struct {
 	Resp     *http.Response
 	LogLevel LogLevel
 	Err      error
+	Writer   *multipart.Writer
 	Option
 }
 
@@ -159,20 +164,25 @@ func transformResponse(resp *http.Response) error {
 }
 
 func (c *Client) Do() *Client {
+	if c.Writer != nil {
+		c.SetHeader(contentType, c.Writer.FormDataContentType())
+		c.Writer.Close()
+	}
 	req, err := http.NewRequest(c.Method, c.URL, c.Body)
 	if err != nil {
 		c.Err = err
 		return c
 	}
+
 	req.Header = c.Header
 	c.ht.Timeout = c.Option.Timeout
 
 	c.Resp, err = c.ht.Do(req)
+
 	if err != nil {
 		c.Err = err
 		return c
 	}
-
 	switch {
 	case c.Resp.StatusCode == http.StatusSwitchingProtocols:
 		// no-op, we've been upgraded
@@ -205,11 +215,12 @@ func (c *Client) AddHeader(header http.Header) *Client {
 func (c *Client) SetHeader(key string, values ...string) *Client {
 	for _, v := range values {
 		c.Header.Add(key, v)
+		fmt.Printf("header vv: %v\n", v)
 	}
 	return c
 }
 
-func (c *Client) SetQuery(key, value string) *Client {
+func (c *Client) AddQuery(key, value string) *Client {
 	if key == "" || value == "" {
 		return c
 	}
@@ -219,6 +230,45 @@ func (c *Client) SetQuery(key, value string) *Client {
 		c.URL += "?"
 	}
 	c.URL = c.URL + fmt.Sprintf("%s=%s", key, value)
+	return c
+}
+func (c *Client) SetQuery(params map[string]interface{}) *Client {
+	if len(params) == 0 {
+		return c
+	}
+	for k, v := range params {
+		c.AddQuery(k, fmt.Sprintf("%v", v))
+	}
+	return c
+}
+func (c *Client) SetFormField(key, value string) *Client {
+	if c.Body == nil {
+		buf := &bytes.Buffer{}
+		c.Body = io.Reader(buf)
+		c.Writer = multipart.NewWriter(buf)
+	}
+	c.Writer.WriteField(key, value)
+	return c
+}
+func (c *Client) SetFormFile(key, path string) *Client {
+	if c.Body == nil {
+		buf := &bytes.Buffer{}
+		c.Body = io.Reader(buf)
+		c.Writer = multipart.NewWriter(buf)
+	}
+	file, err := os.Open(path)
+	if err != nil {
+		return c
+	}
+	defer file.Close()
+	part, err := c.Writer.CreateFormFile(key, filepath.Base(path))
+	if err != nil {
+		return c
+	}
+	_, err = io.Copy(part, file)
+	if err != nil {
+		return c
+	}
 	return c
 }
 
