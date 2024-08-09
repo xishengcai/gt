@@ -251,6 +251,10 @@ func (c *Client) SetFormField(key, value string) *Client {
 	return c
 }
 func (c *Client) SetFormFile(key, path string) *Client {
+	errReturn := func(err error) *Client {
+		c.Err = err
+		return c
+	}
 	if c.Body == nil {
 		buf := &bytes.Buffer{}
 		c.Body = io.Reader(buf)
@@ -258,16 +262,20 @@ func (c *Client) SetFormFile(key, path string) *Client {
 	}
 	file, err := os.Open(path)
 	if err != nil {
-		return c
+		return errReturn(err)
 	}
-	defer file.Close()
+	defer func() {
+		if err := file.Close(); err != nil {
+			c.Err = err
+		}
+	}()
 	part, err := c.Writer.CreateFormFile(key, filepath.Base(path))
 	if err != nil {
-		return c
+		return errReturn(err)
 	}
 	_, err = io.Copy(part, file)
 	if err != nil {
-		return c
+		return errReturn(err)
 	}
 	return c
 }
